@@ -1,0 +1,152 @@
+{{- if .Values.deployment.main}} 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.deployment.main.name}}
+  namespace: {{.Values.deployment.namespace}}
+  labels:
+{{- if .Values.deployment.main.app_labels}}
+{{.Values.app_labels | toYaml | trim | indent 4 }}
+{{- end}}
+{{- if not .Values.deployment.main.app_labels}}
+    app: {{.Values.deployment.main.name}}
+{{- end}}
+  {{- if .Values.deployment.main.annotations}}
+  annotations: {{.Values.deployment.main.annotations | toYaml | trim | nindent 4}}
+  {{- end}}
+spec:
+  replicas: {{.Values.deployment.main.replicas}}
+  selector:
+    matchLabels:
+{{- if .Values.deployment.main.app_labels}}
+{{.Values.deployment.main.app_labels | toYaml | trim | indent 6}}
+{{- end}}
+{{- if not .Values.deployment.main.app_labels}}
+      app: {{.Values.deployment.main.name}}
+{{- end}}
+  template:
+    metadata:
+      labels:
+{{- if .Values.deployment.main.app_labels}}
+{{.Values.deployment.main.app_labels | toYaml | trim | indent 8}}
+{{- end}}
+      {{- if not .Values.deployment.main.app_labels}}
+        app: {{.Values.deployment.main.name}}
+      {{- end}}
+    spec:
+      {{- if .Values.deployment.main.affinity}}
+      affinity: {{ .Values.deployment.main.affinity | toYaml | trim | nindent 8}}
+      {{- end}}
+      {{- if .Values.deployment.main.volumes}}
+      volumes: {{.Values.deployment.main.volumes | toYaml | trim | nindent 6}}
+      {{- end -}}
+      {{- if .Values.deployment.main.imagePullSecrets}}
+      imagePullSecrets: {{.Values.deployment.main.imagePullSecrets | toYaml | trim | nindent 6}}
+      {{- end}}
+      containers:
+      - name: {{or .Values.deployment.main.container_name .Values.deployment.main.name}}
+        image: {{.Values.deployment.main.image}}
+        {{- if .Values.deployment.main.container_command}}
+        command: {{.Values.deployment.main.container_command}}
+        {{- end}}
+        {{- if .Values.deployment.main.container_args}}
+        args:
+          {{- range $arg := .Values.deployment.main.container_args}}
+          - {{$arg | quote}}
+          {{- end}}
+        {{- end}}
+        {{- if .Values.deployment.main.readiness_path}}
+        readinessProbe:
+          httpGet:
+            path: {{.Values.deployment.main.readiness_path}}
+            port: {{or .Values.deployment.main.readiness_port .Values.deployment.main.port}}
+            {{- if .Values.deployment.main.readiness_httpHeaders}}
+            httpHeaders: {{.Values.deployment.main.readiness_httpHeaders | toYaml | trim | nindent 12}}
+            {{- end}}
+          initialDelaySeconds: {{or .Values.deployment.main.readiness_delay 5}}
+          failureThreshold: {{or .Values.deployment.main.readiness_failure_threshold 5}}
+          periodSeconds: {{or .Values.deployment.main.readiness_period 3}}
+        {{- end}}
+        {{- if .Values.deployment.main.liveness_path}}
+        livenessProbe:
+          httpGet:
+            path: {{.Values.deployment.main.liveness_path}}
+            port: {{or .Values.deployment.main.liveness_port .Values.deployment.main.port}}
+            {{- if .Values.deployment.main.liveness_httpHeaders}}
+            httpHeaders: {{.Values.deployment.main.liveness_httpHeaders | toYaml | trim | nindent 12}}
+            {{- end}}
+          initialDelaySeconds: {{or .Values.deployment.main.liveness_delay 5}}
+          failureThreshold: {{or .Values.deployment.main.liveness_failure_threshold 5}}
+          periodSeconds: {{or .Values.deployment.main.liveness_period 3}}
+        {{- end}}
+
+                
+        {{- if .Values.deployment.env.variable}}
+        env:
+          {{- range .Values.deployment.env.variable }}
+          - name: {{ .name }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .valueFrom.secretKeyRef.name }}
+                key: {{ .valueFrom.secretKeyRef.key }}
+          {{- end }} 
+        {{- end }} 
+
+        {{- if or .Values.deployment.env.config .Values.deployment.env.secrets}}
+        envFrom:
+        {{- if .Values.deployment.env.config}}
+        - configMapRef:
+            name: {{.Values.deployment.main.name}}
+        {{- end}}
+        {{- if .Values.deployment.env.secrets}}
+        {{- range $value := .Values.deployment.env.secrets.names}}
+        - secretRef:
+            name: {{$value}}
+        {{- end}}
+        {{- end}}
+        {{- end}}
+        {{- if or .Values.deployment.main.resources.limits .Values.deployment.main.resources.requests}}
+        resources:
+        {{- if .Values.deployment.main.resources.limits}}
+          limits:
+            cpu: {{.Values.deployment.main.resources.limits.cpu}}
+            memory: {{.Values.deployment.main.resources.limits.memory}}
+        {{- end}}
+        {{- if .Values.deployment.main.resources.requests}}
+          requests:
+            cpu: {{.Values.deployment.main.resources.requests.cpu}}
+            memory: {{.Values.deployment.main.resources.requests.memory}}
+        {{- end}}
+        {{- end}}
+        {{- if .Values.deployment.main.port}}
+        ports:
+        - containerPort: {{.Values.deployment.main.port}}
+          name: {{.Values.deployment.main.portname}}
+        {{- end}}
+        {{- if .Values.deployment.main.multi_ports}}
+        ports: {{.Values.deployment.main.multi_ports | toYaml | trim | nindent 8}}
+        {{- end}}
+        {{- if .Values.deployment.main.volumeMounts}}
+        volumeMounts: {{.Values.deployment.main.volumeMounts | toYaml | trim | nindent 8}}
+        {{- end}}
+      {{- if .Values.deployment.main.promExporter}}
+      - name: {{.Values.deployment.main.promExporter.name}}
+        image: {{.Values.deployment.main.image}}
+        {{- if .Values.deployment.main.promExporter.command}}
+        command: {{.Values.deployment.main.promExporter.command}}
+        {{- end}}
+        {{- if .Values.deployment.main.promExporter.args}}
+        args:
+          {{- range $arg := .Values.deployment.main.promExporter.args}}
+          - {{$arg | quote}}
+          {{- end}}
+        {{- end}}
+        {{- if .Values.deployment.main.promExporter.port}}
+        ports:
+        - containerPort: {{.Values.deployment.main.promExporter.port}}
+        {{- end}}
+        {{- if .Values.deployment.main.promExporter_resources}}
+        resources: {{.Values.deployment.main.promExporter_resources | toYaml | trim | nindent 10}}
+        {{- end }}
+      {{- end }}
+{{- end}}
