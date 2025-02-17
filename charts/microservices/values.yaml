@@ -1,6 +1,6 @@
 deployment:
   namespace: ${infra.kubernetes.namespace}
-  configmap__name: "alicemicroservices"
+  configmap__name: "microservices"
   env:
     config:
     secrets:
