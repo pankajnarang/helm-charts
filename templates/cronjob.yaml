@@ -1,0 +1,71 @@
+{{- if .Values.deployment.env.cronjob }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{.Values.deployment.env.cronjob.name}}
+  namespace: {{.Values.deployment.env.cronjob.namespace}}
+spec:
+  {{- if .Values.deployment.env.cronjob.concurrencyPolicy}}
+  concurrencyPolicy: {{.Values.deployment.env.cronjob.concurrencyPolicy}}
+  {{- end}}
+  {{- if .Values.deployment.env.cronjob.failedJobsHistoryLimit}}
+  failedJobsHistoryLimit: {{.Values.deployment.env.cronjob.failedJobsHistoryLimit}}
+  {{- end}}
+  schedule: {{quote .Values.deployment.env.cronjob.schedule}}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          {{- if .Values.deployment.env.cronjob.volumes }}
+          volumes:
+          - name: {{.Values.deployment.env.cronjob.volumes.name}}
+            persistentVolumeClaim:
+              claimName: {{.Values.deployment.env.cronjob.volumes.name}}-pv-claim
+          {{- end}}
+          containers:
+          - name: {{.Values.deployment.env.cronjob.container_name}}
+            {{- if .Values.deployment.env.cronjob.container_command}}
+            command: {{.Values.deployment.env.cronjob.container_command | toYaml | trim | nindent 14}}
+            {{- end}}
+            image: {{.Values.deployment.env.cronjob.image}}
+            {{- if .Values.deployment.env.cronjob.resources}}
+            resources: {{.Values.deployment.env.cronjob.resources}}
+            {{- end}}
+            {{- if .Values.deployment.env.cronjob.terminationMessagePath}}
+            terminationMessagePath: {{.Values.deployment.env.cronjob.terminationMessagePath}}
+            {{- end}}
+            {{- if .Values.deployment.env.cronjob.terminationMessagePolicy}}
+            terminationMessagePolicy: {{.Values.deployment.env.cronjob.terminationMessagePolicy}}
+            {{- end}}
+            {{- if or .Values.deployment.env.cronjob.isConfig .Values.deployment.env.cronjob.isSecrets}}
+            envFrom:
+            {{- if .Values.deployment.env.cronjob.isConfig}}
+            - configMapRef:
+                name: {{.Values.deployment.env.cronjob.name}}
+            {{- end}}
+            {{- if .Values.deployment.env.cronjob.isSecrets}}
+            {{- range $value := .Values.deployment.env.secrets.names}}
+            - secretRef:
+                name: {{$value}}
+            {{- end}}
+            {{- end}}
+            {{- end}}
+            {{- if .Values.deployment.env.cronjob.volumes}}
+            volumeMounts:
+            - name: {{.Values.deployment.env.cronjob.volumes.name}}
+              mountPath: {{.Values.deployment.env.cronjob.volumes.filepath}}
+            {{- end}}
+          restartPolicy: {{.Values.deployment.env.cronjob.restartPolicy}}
+          {{- if .Values.deployment.env.cronjob.dnsPolicy}}
+          dnsPolicy: {{.Values.deployment.env.cronjob.dnsPolicy}}
+          {{- end}}
+          {{- if .Values.deployment.env.cronjob.schedulerName}}
+          schedulerName: {{.Values.deployment.env.cronjob.schedulerName}}
+          {{- end}}
+          {{- if .Values.deployment.env.cronjob.securityContext}}
+          securityContext: {{.Values.deployment.env.cronjob.securityContext}}
+          {{- end}}
+          {{- if .Values.deployment.env.cronjob.terminationGracePeriodSeconds}}
+          terminationGracePeriodSeconds: {{.Values.deployment.env.cronjob.terminationGracePeriodSeconds}}
+          {{- end}}
+{{- end}}

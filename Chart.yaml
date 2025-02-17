@@ -1,0 +1,12 @@
+apiVersion: v2
+name: Microservices
+description: Helm chart for deploying microservices ko Kubernetes
+home: https://github.com/pankajnarang/helm-charts
+sources:
+  - https://github.com/pankajnarang/helm-charts
+maintainers:
+  - email: pankaj.narang@outlook.com
+    name: PankajNarang
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

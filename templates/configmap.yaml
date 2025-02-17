@@ -1,0 +1,8 @@
+{{- if .Values.deployment.env.config }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.deployment.configmap__name }}
+data:
+{{.Values.deployment.env.config | toYaml | indent 2}}
+{{- end}}
