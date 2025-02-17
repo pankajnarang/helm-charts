@@ -23,7 +23,7 @@ jobs:
 
         # Optional step if GPG signing is used
         - name: Prepare GPG key
-            run: |
+          run: |
             gpg_dir=.cr-gpg
             mkdir "$gpg_dir"
 
@@ -35,7 +35,7 @@ jobs:
 
             echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV"
             echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV"
-            env:
+          env:
             GPG_KEYRING_BASE64: "${{ secrets.GPG_KEYRING_BASE64 }}"
             GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
 
