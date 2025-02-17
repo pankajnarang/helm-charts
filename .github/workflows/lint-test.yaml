@@ -12,10 +12,10 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
-        id: install
+        uses:  azure/setup-helm@v4.2.0
         with:
-          version: v3.5
+          version: v4.2.0
+        id: install
 
       # Python is required because `ct lint` runs Yamale (https://github.com/23andMe/Yamale) and
       # yamllint (https://github.com/adrienverge/yamllint) which require Python
